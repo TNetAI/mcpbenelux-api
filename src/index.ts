@@ -45,9 +45,15 @@ openapi.get("/api/connect-meta", async (c) => {
 	const SUPABASE_SERVICE_ROLE_KEY = c.env.SUPABASE_SERVICE_ROLE_KEY;
 	const COMPOSIO_API_KEY = c.env.COMPOSIO_API_KEY;
 	const AUTH_CONFIG_ID = c.env.COMPOSIO_METAADS_AUTH_CONFIG_ID;
-	if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !COMPOSIO_API_KEY || !AUTH_CONFIG_ID) {
-		return c.text("Server misconfigured: missing required env vars", 500);
-	}
+	const missing = [
+  ["SUPABASE_URL", !!SUPABASE_URL],
+  ["SUPABASE_SERVICE_ROLE_KEY", !!SUPABASE_SERVICE_ROLE_KEY],
+  ["COMPOSIO_API_KEY", !!COMPOSIO_API_KEY],
+  ["COMPOSIO_METAADS_AUTH_CONFIG_ID", !!AUTH_CONFIG_ID],
+].filter(([, ok]) => !ok).map(([name]) => name);
+if (missing.length) {
+  return c.text("Missing env vars: " + missing.join(", "), 500);
+}
 	// 1) Verify user via Supabase
 	const userRes = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
 		headers: {
